@@ -1,1 +1,1 @@
-Testing out morph.io with a simple scraper for front page of HN.
+Scrape NYTimes technology RSS feed with morph.io
