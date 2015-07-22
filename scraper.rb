@@ -14,28 +14,35 @@ db.execute <<-SQL
 SQL
 
 # Grab the rss
-rss_xml = ScraperWiki.scrape('http://rss.nytimes.com/services/xml/rss/nyt/Technology.xml')
-rss = Nokogiri::HTML(rss_xml)
-things = rss.xpath('//item')
-# Convert to hash maps with proper data
-db_data = things.map do |element|
-  title = element.css('title').text
-  url = element.css('link').first['href']
-  author = element.css('creator').text
-  summary = element.css('description').text
-  timestamp = element.css('pubdate').text
-  db_data = {
-    'title' => title, 
-    'url' => url, 
-    'author' => author, 
-    'summary' => summary,
-    'timestamp' => timestamp
-  }
-end
+feeds = ['http://rss.nytimes.com/services/xml/rss/nyt/Science.xml',
+         'http://rss.nytimes.com/services/xml/rss/nyt/Technology.xml',
+         'http://rss.nytimes.com/services/xml/rss/nyt/Space.xml',
+         'http://rss.nytimes.com/services/xml/rss/nyt/HomePage.xml']
+feeds.each do |feed|
+  rss_xml = ScraperWiki.scrape(feed)
+  rss = Nokogiri::HTML(rss_xml)
+  things = rss.xpath('//item')
+  # Convert to hash maps with proper data
+  db_data = things.map do |element|
+    title = element.css('title').text
+    url = element.css('link').first['href']
+    author = element.css('creator').text
+    summary = element.css('description').text
+    timestamp = element.css('pubdate').text
+    db_data = {
+      'title' => title, 
+      'url' => url, 
+      'author' => author, 
+      'summary' => summary,
+      'timestamp' => timestamp
+    }
+  end
 
-# Insert into database
-db_data.each do |data_item|
-  columns = data_item.keys.join(', ')
-  values = data_item.keys.map {|k| ":#{k}"}.join(', ')
-  db.execute("insert into data (#{columns}) values (#{values})", data_item)
+  # Insert into database
+  db_data.each do |data_item|
+    columns = data_item.keys.join(', ')
+    values = data_item.keys.map {|k| ":#{k}"}.join(', ')
+    db.execute("insert into data (#{columns}) values (#{values})", data_item)
+  end
+
 end
